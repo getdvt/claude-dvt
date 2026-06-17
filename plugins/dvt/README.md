@@ -36,8 +36,11 @@ commands/connect.md          /dvt:connect — first-run setup + verify
 skills/dvt-spec-author/      vendored dvt dashboard-spec authoring skill
 ```
 
-`skills/dvt-spec-author/SKILL.md` is vendored byte-for-byte from the canonical copy in the dvt repo;
-don't hand-edit it (drift CI lands in DVT-202).
+`skills/dvt-spec-author/SKILL.md` is vendored byte-for-byte from the canonical copy in the dvt repo
+(`web/public/dvt-spec-authoring-skill.md`); don't hand-edit it. Re-sync it with
+[`scripts/sync-from-dvt.sh`](../../scripts/sync-from-dvt.sh); CI
+([`skill-drift.yml`](../../.github/workflows/skill-drift.yml)) fails if the vendored copy drifts from
+the canonical one deployed at demo.dvt.dev.
 
 ## Advanced / manual setup
 
