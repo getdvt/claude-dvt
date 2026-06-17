@@ -1,0 +1,65 @@
+# dvt — Claude Code plugin
+
+A thin client for [dvt](https://dvt.dev) (data viz tool). dvt treats a dashboard as a versioned JSON
+spec — "dashboards as data" — that humans and agents author the same way. This plugin brings that
+workflow into Claude Code.
+
+It bundles two things:
+
+- **`dvt-spec-author` skill** — teaches the agent how to read, write, and validate a dvt dashboard
+  spec (the same authoring skill dvt ships canonically).
+- **`dvt` MCP client** — connects to a dvt endpoint so the agent can validate, render, and apply
+  specs against a live dvt instance.
+
+The plugin is open and ungated. It carries no secret and no entitlement logic — your access is
+decided entirely by the dvt endpoint and the key you connect with.
+
+## Connect
+
+Run **`/dvt:connect`** and follow the prompts. You can point the client at either:
+
+- **dvt Gallery (hosted)** — `https://mcp.dvt.dev/mcp` with a Gallery API key minted at
+  `https://app.dvt.dev/app/api-keys`. The key is stored by Claude Code at user scope, never in this
+  repo.
+- **Self-hosted engine** — your own dvt engine URL (e.g. `http://localhost:8001/mcp`), with or
+  without auth depending on how you front it.
+
+The plugin registers no MCP server until you run `/dvt:connect` — that command adds a user-scoped
+`dvt` server carrying your endpoint and (for Gallery) your key, so nothing secret and nothing broken
+ships in the repo.
+
+## What's inside
+
+```
+.claude-plugin/plugin.json   plugin manifest (name "dvt", semver)
+commands/connect.md          /dvt:connect — first-run setup + verify
+skills/dvt-spec-author/      vendored dvt dashboard-spec authoring skill
+```
+
+`skills/dvt-spec-author/SKILL.md` is vendored byte-for-byte from the canonical copy in the dvt repo;
+don't hand-edit it (drift CI lands in DVT-202).
+
+## Advanced / manual setup
+
+`/dvt:connect` runs `claude mcp add` for you. If you'd rather wire it by hand, add an HTTP MCP server
+named `dvt` at user scope:
+
+```bash
+# dvt Gallery (hosted) — with your dvt_live_ key
+claude mcp add --transport http --scope user dvt "https://mcp.dvt.dev/mcp" \
+  --header "Authorization: Bearer dvt_live_…"
+
+# self-hosted engine — no auth
+claude mcp add --transport http --scope user dvt "http://localhost:8001/mcp"
+```
+
+Equivalent `.mcp.json` shape (for reference — the key lives in your local config, never in a repo):
+
+```jsonc
+{ "mcpServers": { "dvt": { "type": "http", "url": "https://mcp.dvt.dev/mcp",
+  "headers": { "Authorization": "Bearer <your dvt_live_ key>" } } } }
+```
+
+## License
+
+[Apache-2.0](../../LICENSE).
