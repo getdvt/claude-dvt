@@ -28,39 +28,34 @@ Then restart Claude Code (plugins don't hot-load).
 
 ## Connect
 
-The plugin talks to a dvt endpoint over MCP. Point it at one of two targets:
+After installing, run **`/dvt:connect`** and follow the prompts. The plugin talks to a dvt endpoint
+over MCP; point it at one of two targets:
 
 - **dvt Gallery (hosted)** — connect to `https://mcp.dvt.dev/mcp` with a Gallery API key. Mint a key
-  in your dvt workspace (`/app/api-keys`), then paste the `dvt_live_…` value when the plugin prompts
-  for it. The key is stored by Claude Code, never committed here.
-- **Self-hosted engine** — point the client at your own dvt engine URL instead. Use this if you run
-  the dvt stack yourself.
+  in your dvt workspace at `https://app.dvt.dev/app/api-keys`, then paste the `dvt_live_…` value when
+  `/dvt:connect` prompts for it. The key is stored by Claude Code at user scope, never committed here.
+- **Self-hosted engine** — point the client at your own dvt engine URL instead (e.g.
+  `http://localhost:8001/mcp`). Use this if you run the dvt stack yourself.
 
-> The plugin never embeds a key, an endpoint default that grants access, or any entitlement check.
-> What you can do is decided by your dvt endpoint and the scopes on the key you provide.
+`/dvt:connect` registers a user-scoped `dvt` MCP server with your endpoint and (for Gallery) your
+key, then verifies the connection by listing your dashboards. Once connected, just ask the agent to
+build a dashboard.
 
-<!-- TODO DVT-199: ship the actual connect flow. The MCP client config (which endpoint, how the
-     dvt_live_… key / self-host URL is supplied to the MCP server) lands in DVT-199. Until then this
-     section documents the intended UX; the wiring is not yet present in this repo. -->
+> The plugin never embeds a key or any entitlement check. What you can do is decided by your dvt
+> endpoint and the scopes on the key you provide.
 
 ## What's inside
 
 ```
 .claude-plugin/
-  marketplace.json     single-plugin marketplace so /plugin marketplace add resolves this repo
+  marketplace.json              single-plugin marketplace so /plugin marketplace add resolves this repo
 plugins/dvt/
-  .claude-plugin/
-    plugin.json        plugin manifest (name "dvt", semver)
-  skills/              dvt dashboard-spec authoring skill   (TODO DVT-199)
-  .mcp.json            MCP client config → dvt endpoint      (TODO DVT-199)
-  commands/connect.md  /dvt:connect first-run setup/auth     (TODO DVT-199)
-LICENSE                Apache-2.0
+  .claude-plugin/plugin.json    plugin manifest (name "dvt", semver)
+  commands/connect.md           /dvt:connect — first-run setup + verify (registers the MCP server)
+  skills/dvt-spec-author/        vendored dvt dashboard-spec authoring skill
+  README.md
+LICENSE                         Apache-2.0
 ```
-
-<!-- TODO DVT-199: add plugins/dvt/skills/ (the dashboard-spec authoring skill, vendored from the
-     canonical dvt repo), plugins/dvt/.mcp.json (the MCP client config), and plugins/dvt/commands/
-     connect.md (the setup flow). This scaffold (DVT-198) only establishes the repo, the resolvable
-     manifest, and the marketplace listing. -->
 
 ## License
 
