@@ -20,7 +20,7 @@ governed entirely by the dvt endpoint and the key you connect with.
 In any Claude Code session:
 
 ```
-/plugin marketplace add github.com/getdvt/claude-dvt
+/plugin marketplace add getdvt/claude-dvt
 /plugin install dvt@claude-dvt
 ```
 
@@ -55,12 +55,15 @@ plugins/dvt/
   skills/dvt-spec-author/        vendored dvt dashboard-spec authoring skill
   README.md
 scripts/sync-from-dvt.sh        re-sync the vendored skill from canonical getdvt/dvt
+RELEASING.md                    version + tag convention (semver in plugin.json)
 LICENSE                         Apache-2.0
 ```
 
 The bundled spec-authoring skill is vendored byte-for-byte from canonical `getdvt/dvt`. Re-sync it
 with `./scripts/sync-from-dvt.sh`; a drift CI check (`.github/workflows/skill-drift.yml`) fails if the
 vendored copy diverges from the canonical one deployed at demo.dvt.dev.
+
+Maintainers: see [RELEASING.md](./RELEASING.md) for the version + tag flow.
 
 ## License
 
