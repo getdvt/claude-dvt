@@ -46,5 +46,6 @@ if ! git -C "$DVT_REPO" cat-file -e "$DVT_REF:$SRC_PATH" 2>/dev/null; then
 fi
 
 git -C "$DVT_REPO" show "$DVT_REF:$SRC_PATH" > "$DST"
-echo "synced: $DVT_REPO @ $DVT_REF : $SRC_PATH"
+SRC_SHA="$(git -C "$DVT_REPO" rev-parse --short "$DVT_REF" 2>/dev/null || echo '?')"
+echo "synced: $DVT_REPO @ $DVT_REF ($SRC_SHA) : $SRC_PATH"
 echo "    ->: $DST"

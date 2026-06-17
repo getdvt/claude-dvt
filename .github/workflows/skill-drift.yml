@@ -44,8 +44,11 @@ jobs:
             -H 'Cache-Control: no-cache' \
             https://demo.dvt.dev/dvt-spec-authoring-skill.md -o /tmp/canonical.md
           # Guard against a soft-404 (SPA HTML fallback) masquerading as the file:
-          # the real skill file starts with its YAML frontmatter delimiter.
-          if ! head -1 /tmp/canonical.md | grep -q '^---$'; then
+          # demo.dvt.dev returns 200 + HTML for unknown paths, so `curl -f` can't catch
+          # it. Assert both the frontmatter delimiter AND the distinctive `name:` line
+          # (a stray `---` divider in an HTML shell shouldn't pass).
+          if ! head -1 /tmp/canonical.md | grep -q '^---$' \
+             || ! grep -q '^name: dvt-spec-author$' /tmp/canonical.md; then
             echo "::error::demo.dvt.dev did not return the skill markdown (HTML fallback?). Cannot verify drift."
             head -3 /tmp/canonical.md
             exit 1
