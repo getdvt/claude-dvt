@@ -44,9 +44,9 @@ agents/dvt-layout-critic.md      fresh-read critic: layout craft (Gestalt/Tufte/
 skills/dvt-spec-author/      vendored dvt dashboard-spec authoring skill
 ```
 
-The two critic agents carry dvt's design opinion (the narrative + layout rubric); they are sourced
-from dvt's internal review agents and kept roughly in sync with them. They critique the **spec**
-(cheap, pre-render) — complementary to a rendered-image review.
+The two critic agents carry dvt's design opinion (the narrative + layout rubric), kept roughly in
+sync with dvt's own design-review rubric. They critique the **spec** (cheap, pre-render) —
+complementary to a rendered-image review.
 
 `skills/dvt-spec-author/SKILL.md` is vendored byte-for-byte from the canonical copy in the dvt repo
 (`web/public/dvt-spec-authoring-skill.md`); don't hand-edit it. Re-sync it with
