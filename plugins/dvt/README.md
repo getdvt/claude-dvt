@@ -4,10 +4,15 @@ A thin client for [dvt](https://dvt.dev) (data viz tool). dvt treats a dashboard
 spec — "dashboards as data" — that humans and agents author the same way. This plugin brings that
 workflow into Claude Code.
 
-It bundles two things:
+It bundles:
 
 - **`dvt-spec-author` skill** — teaches the agent how to read, write, and validate a dvt dashboard
   spec (the same authoring skill dvt ships canonically).
+- **`/dvt:dvt-review` command** — a pre-apply design critique. It runs two fresh subagents
+  (`dvt-narrative-critic` for the analytical story, `dvt-layout-critic` for visual craft) and folds
+  in the engine's deterministic lints, then gives you a GO / REVISE recommendation with concrete
+  fixes *before* you persist. A clean read, by design — the session that authored a spec is the worst
+  judge of it.
 - **`dvt` MCP client** — connects to a dvt endpoint so the agent can validate, render, and apply
   specs against a live dvt instance.
 
@@ -33,8 +38,15 @@ ships in the repo.
 ```
 .claude-plugin/plugin.json   plugin manifest (name "dvt", semver)
 commands/connect.md          /dvt:connect — first-run setup + verify
+commands/dvt-review.md       /dvt:dvt-review — pre-apply narrative + layout critique
+agents/dvt-narrative-critic.md   fresh-read critic: analytical story (answer-first, spine, key message)
+agents/dvt-layout-critic.md      fresh-read critic: layout craft (Gestalt/Tufte/Few) + deterministic lints
 skills/dvt-spec-author/      vendored dvt dashboard-spec authoring skill
 ```
+
+The two critic agents carry dvt's design opinion (the narrative + layout rubric); they are sourced
+from dvt's internal review agents and kept roughly in sync with them. They critique the **spec**
+(cheap, pre-render) — complementary to a rendered-image review.
 
 `skills/dvt-spec-author/SKILL.md` is vendored byte-for-byte from the canonical copy in the dvt repo
 (`web/public/dvt-spec-authoring-skill.md`); don't hand-edit it. Re-sync it with
