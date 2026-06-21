@@ -1,6 +1,6 @@
 {
   "name": "dvt",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "dvt dashboards-as-data: author, review, and apply dashboard specs from your AI harness against dvt Gallery (mcp.dvt.dev) or a self-hosted engine. Includes /dvt:dvt-review — a pre-apply narrative + layout critique.",
   "author": {
     "name": "dvt Founders",
