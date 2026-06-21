@@ -41,6 +41,12 @@ over MCP; point it at one of two targets:
 key, then verifies the connection by listing your dashboards. Once connected, just ask the agent to
 build a dashboard.
 
+The plugin bundles the authoring skill so it works offline, but a connected engine also serves **its
+own** copy — matched to the spec version that engine speaks — at the MCP Resource
+`dvt://skill/spec-authoring`. When that revision is at least as new as the bundled one, `/dvt:connect`
+prefers it for the session (and tells you), so authoring stays correct as the schema evolves without a
+re-install. If the engine doesn't serve it, the bundled copy is always a valid fallback (ADR-0047).
+
 > The plugin never embeds a key or any entitlement check. What you can do is decided by your dvt
 > endpoint and the scopes on the key you provide.
 

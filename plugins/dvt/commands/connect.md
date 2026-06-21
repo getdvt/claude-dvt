@@ -78,9 +78,45 @@ If it fails, map the error:
 - **Server not found / no `dvt` tools** → the MCP server didn't load. Confirm they restarted Claude
   Code after Step 2, and that `claude mcp list` shows a `dvt` server.
 
-## Step 4 — hand off to authoring
+## Step 4 — prefer your engine's skill revision (freshness, ADR-0047)
 
-Once verified, point them at the bundled skill:
+This plugin bundles a vendored copy of the dvt spec-authoring skill (the `dvt-spec-author` skill,
+targeting spec **schemaVersion 1**) so it works offline and pre-connect. A connected dvt engine also
+serves **its own** copy of that skill — matched to the spec version that engine speaks — as a
+read-only MCP Resource at **`dvt://skill/spec-authoring`**. Because dvt Gallery keeps its engine
+current, the served copy is the freshest one; preferring it is how authoring stays correct as the
+schema evolves (no plugin re-install needed).
+
+Once the connection is verified, fetch that resource **once for this session** and decide which skill
+to use:
+
+1. **Read** the `dvt://skill/spec-authoring` MCP Resource the `dvt` server exposes. Read its `_meta`,
+   which carries `{ schemaVersion, engineRef, sha256, generatedAt }`.
+2. **Prefer the served revision** as the authoritative spec-authoring guidance for this session **only
+   when** its `_meta.schemaVersion` is **≥ 1** (the bundled snapshot's schemaVersion). This is the one
+   guardrail: never silently *downgrade* to older guidance. Compare **`schemaVersion`** — do **not**
+   compare `sha256` against the bundled copy (a fresher revision legitimately has different bytes, so a
+   hash mismatch is expected and meaningless here; `sha256` is only a drift/corruption aid, not a
+   signature).
+3. **Show a one-line notice** so the user has a visible signal of what changed, e.g.:
+   > Using your engine's spec-authoring skill (schemaVersion 2, engineRef `skill-1a2b3c4d5e6f`) — it
+   > matches the spec version your dvt engine speaks.
+4. **Fall back to the bundled skill** — silently and without error — if the resource is **absent**
+   (an older or Community engine that predates it), **unreadable**, or reports a `schemaVersion` **< 1**.
+   Missing freshness is **never a hard failure**; the bundled copy is always a valid baseline.
+
+**Why preferring the served copy is safe.** Trust derives from **the endpoint the user configured back
+in Step 2** — a decision made once, at connect time, not re-litigated per resource. You already
+authenticated to this engine and call its tools; reading its skill is the same trust. Surfacing
+`engineRef` + `schemaVersion` in the notice (step 3) makes visible *which* engine's guidance is in
+effect — a signal, not a safeguard: a compromised engine can return any values, so the real protection
+is the schemaVersion-monotonicity guardrail above plus the trust you placed in the endpoint at Step 2.
+
+## Step 5 — hand off to authoring
+
+Once verified, point them at the skill (the served revision if you adopted one in Step 4, otherwise the
+bundled copy):
 
 > You're connected. Now just ask me to build a dashboard — for example: "build a pipeline-health
-> dashboard from this data." I'll author a dvt spec and we can apply it to your dvt instance.
+> dashboard from this data." I'll author a dvt spec — using the authoring skill matched to your engine —
+> and we can apply it to your dvt instance.
