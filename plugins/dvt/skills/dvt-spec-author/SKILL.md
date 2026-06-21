@@ -1853,6 +1853,28 @@ you ship. It's the authoring-skill condensation of the executive-dashboard playb
 (The full playbook — audience framing, KPI-card anatomy, the anti-pattern table — lives in the
 `executive-dashboard` design skill; this checklist is the spec-author's pocket version.)
 
+## Document as you build (ADR-0045)
+
+You author the spec, so document *why* as you go. Two audiences, two field families:
+
+- **Exposed / human (rendered)** — `ChartSpec.footnotes[]` + `sourceNote` (and the same on `TableSpec`): sanitized markdown notes (https/mailto links only) rendered beneath the chart/table; and `Page.doc.description` / `Page.doc.intent`, rendered in the docs drawer. Use for caveats and source attribution a reader should see.
+- **Research / agent (NOT rendered)** — `Page.doc.assumptions[]` / `notes`, and per-element `meta.panels[<panelId>].{purpose, intent, assumptions, notes}` (manifest scope, keyed by panel id — never on the element). Use for the analytical reasoning an agent needs to reproduce or extend the dashboard.
+
+```json
+"footnotes": [{ "where": {"column": "arr"}, "text": "ARR at contract start; excludes mid-period expansions." }],
+"sourceNote": "Source: analytics.public.contracts"
+```
+```json
+"pages": [{ "id": "pipeline", "doc": {
+  "description": "Open pipeline as of last CRM sync; excludes closed deals.",
+  "intent": "Help the VP see whether 3× coverage holds before the forecast call.",
+  "assumptions": [{ "text": "CRM syncs nightly 02:00 UTC.", "assertedBy": "agent" }],
+  "notes": "stage_order drives the funnel sequence." } }]
+```
+`meta.panels` mirrors the same shape per panel. `ProvenanceClaim` = `{ text, assertedBy: "agent"|"human", validatedAt? }` — use `human` only when a human confirmed it; `agent` is the honest default.
+
+**Research existing dashboards** with the read-only `dvt_dashboard_docs` tool: it returns a dashboard's documentation tree (provenance + per-page doc + per-element purpose/intent/assumptions + each element's **defining SQL** `data.query`) without the heavy spec, so you reuse exact metric definitions instead of re-deriving them. The SQL is a **read-only reference — dvt never executes it** (run it yourself in your warehouse CLI if needed).
+
 ## Rules
 
 - No JS functions in specs — use `format` objects and the `{ "$dvtRef": "formatter:pie-label@1" }` ref instead. `$dvtRef` ids are **versioned** (`<kind>:<name>@<version>`, e.g. `formatter:usd-compact@1`) and must be one of the registered ids — an unknown or unversioned ref is rejected at write time (ADR-0016).
