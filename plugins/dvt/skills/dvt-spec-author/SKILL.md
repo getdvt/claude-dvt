@@ -1,6 +1,6 @@
 ---
 name: dvt-spec-author
-description: Author and edit dvt dashboard specs (JSON). Use when a user wants to create, modify, or theme a dvt dashboard, or convert a question/data into a dashboard. Covers the authoring method — audit the data for variance, find one answer-first key message, design encodings/layout, then build and render-verify — not just spec syntax.
+description: Author and edit dvt dashboard specs (JSON). Use when a user wants to create, modify, or theme a dvt dashboard, or convert a question/data into a dashboard. Covers the authoring method — audit the data for variance, then for any 3+ panel build state one answer-first key message and its 2-4 key questions in meta.brief/meta.keyQuestions BEFORE authoring panels (a hard gate — refuse to finalize without it), map panels to those questions, adapt generation to the declared audience (executive/analyst/operator each render differently), design encodings/layout, then build and render-verify — not just spec syntax.
 ---
 
 # dvt Spec Authoring Skill
@@ -75,6 +75,13 @@ Builder (`/builder`) to see it render live.
 
 ## Panel types
 
+Two MCP reference tools cover this table in depth: `dvt_chart_reference` for every
+`chart:*` type (option summary + property-path drill-down, sourced from ECharts'
+own docs) and `dvt_block_reference` for the non-chart, dvt-native block types
+(`kpi`, `hero`, `html`, `table`, `filter-bar`, `container`, `section` — same
+catalog → type-summary → property-path drill-down shape). Call the matching one
+before authoring an unfamiliar type.
+
 | `type` | Renders | Key `spec` fields |
 | --- | --- | --- |
 <!-- BEGIN generated chart-type table (make echarts / ADR-0022) — do not edit between markers -->
@@ -115,7 +122,7 @@ Builder (`/builder`) to see it render live.
 | `media` | Image block (ADR-0014 escape hatch) | `src` (required, sanitized), `alt`, `fit` (`cover`\|`contain`\|`fill`), `rounded`, `caption` (see below) |
 | `divider` | Visible rule line | `orientation`, `thickness`, `color`, `style` (`solid`\|`dashed`\|`dotted`), `inset` (see below) |
 | `section` | Grid heading band that labels a group of panels | panel `title` = the heading; `subtitle` (one line), `rule` (hairline below, default true), `align` (`left`\|`center`\|`right`); takes no query, spans full width (`w:24` by convention). **dvt Core. NOT the canvas `layout.sections[]` block — distinct constructs** (see below) |
-| `filter` | Interactive control whose selected value re-queries target panels | `param` (required unless a range), `valueField` (required), `labelField`, `label` (display label — preferred over `placeholder` for labelling; falls back to `placeholder` → param → `'Filter'`), `placeholder` (input-hint text only), `help` (accessible `?` tooltip), `control` (`select`\|`multiselect`\|`date-range`\|`number-range`\|`search`\|`toggle`\|`number`\|`segmented`\|`radio`\|`button-group`\|`checkbox-list`), `valueType` (`string`\|`number`\|`date`\|`boolean`), `targets`, `values`, `default`, `allLabel`, `unsetMode` (`omit`\|`null`), `operator` (`equals`\|`not-equals`\|`contains`\|`starts-with`\|`ends-with`\|`in`\|`not-in`\|`between`\|`gt`\|`gte`\|`lt`\|`lte`), `apply` (`live`\|`button`), `required` (boolean), `chrome` (`card`\|`none`), `width` (`compact`\|`full`), `density` (`comfortable`\|`compact`), `icon` (`calendar`\|`search`\|`filter`\|`region`\|`tag`\|`clock`\|`user`\|`dollar`); **range** (`between` / `number-range` / `date-range`): `loParam`+`hiParam` (required, replace `param`), `min`, `max`, `step`; **date** (`date-range`): `relativeDate` (`{lo?,hi?}`, each `{unit: minute\|hour\|day\|week\|month\|quarter\|year, amount, direction}`), `presets` (`today`\|`last-7d`\|`last-30d`\|`last-90d`\|`mtd`\|`qtd`\|`ytd`\|`all-time`), `timezone` (IANA, default `UTC`) (see Filters & drill-downs) |
+| `filter` | Interactive control whose selected value re-queries target panels | `param` (required unless a range), `valueField` (required), `labelField`, `label` (display label — preferred over `placeholder` for labelling; falls back to `placeholder` → param → `'Filter'`), `placeholder` (input-hint text only), `help` (accessible `?` tooltip), `control` (`select`\|`multiselect`\|`date-range`\|`number-range`\|`search`\|`toggle`\|`number`\|`segmented`\|`radio`\|`button-group`\|`checkbox-list`\|`top-n`), `valueType` (`string`\|`number`\|`date`\|`boolean`), `targets`, `values`, `default`, `allLabel`, `unsetMode` (`omit`\|`null`), `operator` (`equals`\|`not-equals`\|`contains`\|`starts-with`\|`ends-with`\|`in`\|`not-in`\|`between`\|`gt`\|`gte`\|`lt`\|`lte`), `apply` (`live`\|`button`), `required` (boolean), `chrome` (`card`\|`none`), `width` (`compact`\|`full`), `density` (`comfortable`\|`compact`), `icon` (`calendar`\|`search`\|`filter`\|`region`\|`tag`\|`clock`\|`user`\|`dollar`); **range** (`between` / `number-range` / `date-range`): `loParam`+`hiParam` (required, replace `param`), `min`, `max`, `step`; **date** (`date-range`): `relativeDate` (`{lo?,hi?}`, each `{unit: minute\|hour\|day\|week\|month\|quarter\|year, amount, direction}`), `presets` (`today`\|`last-7d`\|`last-30d`\|`last-90d`\|`mtd`\|`qtd`\|`ytd`\|`all-time`), `timezone` (IANA, default `UTC`); **server-side typeahead** (`select`/`multiselect` only, DVT-540): `searchMode` (`'client'`\|`'server'`, default `'client'`), `searchParam` (required when `searchMode:'server'` — the `%(name)s` placeholder the typed term binds to) (see Filters & drill-downs) |
 | `filter-bar` | Horizontal band grouping several filter elements in one light surface (DVT-551) | `panels` (required — ordered list of child filter element ids from the same page's `panels[]`), `title?`; child filters should set `chrome:"none"` to avoid doubled chrome; children are NOT page grid items; semantic pass enforces existence / no double-placement |
 | `container` | Tabbed container — one page region holding several panel sets behind tabs (layout primitive, not a chart) | `spec.layout: "tabs"` (required), `tabs[]` (required) each `{ id, label, panels:[childId…], layout }`, `defaultTab?`. **Children stay real elements in `panels[]`** referenced by id (never inlined); each tab carries its own mini 24-col `layout`, and the container itself occupies one cell in the page grid. Children are NOT in the page grid. Single level only (no tabs-in-tabs). NOT the same as page-level tabs (`pages[]`+`tabBar`). The semantic validator rejects missing refs / a child placed twice / a child also in the page grid / nesting / a bad `defaultTab` / a tab id that collides with a panel id |
 
@@ -1209,6 +1216,33 @@ a horizontal row of option buttons, same value binding as `select`, ideal for �
 `multiselect`; engine expands to IN-list, DVT-170). All four inline controls commit
 instantly (no Apply step) and share the same option source as their popover counterparts.
 
+`top-n` (Track F) — ranks the value-source query rows by the numeric column `measureField`,
+keeps the top (or bottom) `n` rows per `order` (`"desc"` = Top-N, `"asc"` = Bottom-N;
+default `n: 10`, `order: "desc"`), and binds the resulting category set as a parameter-bound
+IN-list — **same binding contract as `multiselect`** (never string-interpolated, always
+`IN %(param)s`, DVT-170). Client-side only: no engine rewrite; the viewer adjusts N with a
+compact stepper. Fields: `measureField` (required), `n` (default 10),
+`order` (`"desc"` | `"asc"`, default `"desc"`) (`param` + `valueField` are required as for any select/multiselect — the ranked set binds to `param`).
+
+**Server-side typeahead search (`searchMode` / `searchParam`, DVT-540 / ADR-0028 §A4.1).** Applies to `select` and `multiselect` only; ignored for all other control kinds.
+
+- `searchMode`: `'client'` (default / omit) | `'server'`. Client mode filters the already-fetched option list in the browser — zero extra queries, works for up to thousands of options. Server mode fires a debounced re-query of the filter's own value-source on each keystroke, binding the viewer's typed text as a LIKE-escaped named parameter; use for high-cardinality dimensions (millions of distinct values) where loading the full option set upfront is infeasible.
+- `searchParam`: the `data.params` key the typed search term binds to. Required when `searchMode:'server'`; ignored otherwise.
+
+**Value-source predicate contract (server mode — get this wrong and search silently no-ops).** The value-source query MUST contain a `%(searchParam)s` LIKE placeholder in its `WHERE` clause, AND `data.params` MUST declare the matching `searchParam` key (with an initial value). The runtime LIKE-escapes `!`, `%`, and `_` in the viewer's input with `!` and wraps the term as `%term%` before binding — values are never interpolated (ADR-0011 / ADR-0028 §A4.1). Always include the `ESCAPE '!'` clause:
+
+```json
+{ "id": "customer-filter", "type": "filter", "title": "Customer",
+  "data": { "sourceId": "db",
+            "query": "select distinct customer_name from demo.public.customers where 1=1 and customer_name like %(q)s escape '!' order by 1",
+            "params": { "q": "%%" } },
+  "spec": { "param": "customer", "valueField": "customer_name", "control": "select",
+            "searchMode": "server", "searchParam": "q",
+            "unsetMode": "null", "targets": "all" } }
+```
+
+The `data.params` default for `searchParam` (`"q": "%%"` in the example) is the initial load value — bound as the literal two-character string `%%`, which under `LIKE … ESCAPE '!'` is two wildcards (neither `!`-escaped), so the unfiltered first open matches every row. (The `%%`→`%` collapse rule applies only to query *text*, never to a bound parameter *value* — so don't double-percent a real term; `"50%%"` would bind `50` followed by anything, not a literal `50%`.) Omitting `searchParam` from the query or `data.params`, or omitting the `ESCAPE '!'` clause, makes the server return the full unfiltered list or nothing, silently. In particular, an initial value of `""` matches only the empty string, so the control opens with zero options and looks broken — use a match-all default like `%%`.
+
 `valueType`: `string` (default) | `number` | `date` | `boolean`. `targets`: `"all"`
 (default — every panel on the page that declares the key) or an explicit `["panelId", …]`;
 a panel that doesn't declare the key is never re-fetched. `values` — a static
@@ -1426,6 +1460,71 @@ where 1=1
 
 Spec fields on `filter-bar`: `panels` (required, ordered child ids) + `title?`
 (optional heading above the band).
+
+**Cross-page scope, interaction mode, and report placement (ADR-0028 Amendment 4).**
+
+**Structured `targets` form.** The shorthand values `"all"` and `["panelId", …]` are
+convenience forms. The full structured form:
+
+```json
+{ "scope": "page", "panels": "all" | ["panelId", …] }
+```
+
+Three scope values: `"page"` (default) — this page only; `"pages"` — explicit allow-list
+(requires `"pages": ["pageId", …]`); `"dashboard"` — every page. The shorthands map
+exactly: `"all"` ≡ `{ "scope": "page", "panels": "all" }`, and `["panelId", …]` ≡
+`{ "scope": "page", "panels": ["panelId", …] }`.
+
+**Interaction `mode`** — controls what happens to a target panel when the filter fires.
+Three values: `"filter"` (default) re-queries the target at the warehouse; `"highlight"`
+is **client-side only** — dims/de-emphasizes non-matching marks without a re-query (ADR-0011
+fence: never touches the warehouse); `"none"` is inert (declared but does nothing —
+useful for staged authoring). Set at the `targets` level to apply to all bound panels, or
+override per panel in `bindings[]`. Precedence: `bindings[panel].mode > targets.mode > "filter"`.
+
+**Per-target `bindings[]`** — fine-grained overrides for individual panels in `targets`:
+
+```json
+"targets": {
+  "scope": "dashboard",
+  "panels": "all",
+  "mode": "filter",
+  "bindings": [
+    { "panel": "sales-chart", "as": "region_key", "mode": "highlight" }
+  ]
+}
+```
+
+`panel` (required) — a panel id. `as` — re-maps the filter's selected value into a
+**differently-named** `data.params` key on that specific panel (the key MUST already be
+declared on the panel; otherwise it is a no-op and emits an author-time lint warning —
+it never inserts a new key). Use `as` when two panels name the same concept differently.
+`mode` — per-panel override (see above).
+
+**`placement` and `showOnPages`** — top-level `FilterSpec` fields (not inside `targets`).
+`placement: "page"` (default) renders the filter chrome on its home page; `"report"`
+renders the chrome once at the report level, applying across pages. `showOnPages:
+["pageId", …]` (**for `placement:"report"` only — ignored under `placement:"page"`**) restricts which pages render the report-level chrome (orthogonal to `targets.scope`,
+which controls which panels re-query — the two are independent).
+
+```json
+{ "id": "region-filter", "type": "filter", "title": "Region",
+  "data": { "sourceId": "db", "query": "SELECT DISTINCT region FROM orders ORDER BY 1" },
+  "spec": {
+    "param": "region", "valueField": "region", "control": "select",
+    "valueType": "string", "unsetMode": "null", "allLabel": "All regions",
+    "placement": "report",
+    "targets": {
+      "scope": "dashboard",
+      "panels": "all",
+      "mode": "filter",
+      "bindings": [
+        { "panel": "kpi-summary", "as": "region_key", "mode": "highlight" }
+      ]
+    }
+  }
+}
+```
 
 **`drill`** — a property on **any** panel (not a `type`). Retained for back-compat but **inert on its own** (DVT-555): the left-click trigger was removed. To wire drill navigation, use a `contextMenu` action of `type:"drill"` (right-click menu, see below). The `drill` object fields (`targetPage`, `param`, `valueFrom`, `valueType`) are unchanged and the same binding contract applies — the clicked value enters the target page's panels by name through `data.params`, never interpolated.
 
@@ -1903,14 +2002,25 @@ See "Document as you build" below for when to add footnotes vs. intent/assumptio
 
 Place a format where a value renders: `"axisLabel": { "format": {…} }`, a table column `format`, `valueFormat` on a chart, a `tooltip.fields` entry, or a value `label` (see "Number display" above).
 
-## Authoring method — audit, narrate, design, verify
+## Choosing your approach — surgical edit vs full build
+
+- Before authoring, classify the request — the two execution paths have very different costs.
+- **Surgical edit** — the user names an existing element and a specific change ("change the Q3 revenue KPI to red", "fix the funnel title typo", "make this axis start at zero"). Read that one element with `dvt_element_get`, then apply a `dvt_element_patch`. Do NOT run the full audit→narrative→design method and do NOT re-send the whole spec — it wastes tokens and risks rebuilding panels the user didn't ask you to touch.
+- **Block-level reads, not full-spec reads.** If you don't already know the element's id, read the dashboard ONCE with `dvt_dashboard_get(format="concise")` (manifest + `provenanceSummary`, no heavy spec) or `dvt_dashboard_docs` (cheap doc tree) to locate the page/element id, then pull ONLY that element via `dvt_element_get`. Never load the full page spec (`dvt_dashboard_get(format="full")`) just to change one panel.
+- **Full build** — the user wants something new or exploratory ("help me understand our sales", "build a pipeline dashboard", "restructure this to tell a story"). Run the full authoring method below and author via `dvt_dashboard_apply_spec`.
+- When in doubt (an edit spanning several elements, or one that changes the dashboard's story), prefer the full method. A single named property on a single named element is the clear signal for the surgical path.
+
+## Authoring method — audit, narrate, target audience, design, verify
 
 Don't jump straight to charts. A dashboard that just "plots the data" reads flat and
-forgettable. Work in four passes; each one constrains the next. **The first pass is
+forgettable. Work in six passes; each one constrains the next. **The first passes are
 analytical, not visual** — that's what separates a compelling dashboard from a
 technically-correct but boring one.
 
 ### 1. Audit the data first — what's actually interesting?
+
+Before a net-new build, call `dvt_dashboard_check_overlap` to see whether existing content
+already covers this — extend or patch it instead of duplicating.
 
 Before choosing a single chart, profile the source so you build on signal, not noise.
 Run small profiling queries (always fully-qualified — `database.schema.table`):
@@ -1923,14 +2033,65 @@ Run small profiling queries (always fully-qualified — `database.schema.table`)
 
 Prefer cuts with real variance — **time series, distributions, comparisons of unlike things, concentration, and change** — over flat categoricals. If the only available cut is uniform, **reframe the question** rather than drawing a boring bar.
 
-### 2. Narrative — one key message, answer-first
+### 2. Narrative — one key message + questions, before panels
 
-- State the **single key message** in `meta.brief`: one sentence that is the *answer*, not the topic. If you can't write it, you don't understand the data yet — go back to step 1.
+**Scope — 3+ panels only.** The full machinery in this step (`keyQuestions`, panel↔question mapping, section-orphan check) applies to a **3+ panel build**. A 1–2 panel build — a single KPI card, a two-panel glance — needs only a one-line `meta.brief`; its question is self-evident at that scale, and forcing `keyQuestions`/`serves_question` bookkeeping onto it is needless ceremony. (This mirrors the server's own threshold — the provenance checks below only fire at 3+ panels.)
+
+**Tier 1 hard gate (3+ panels) — the only Tier 1 gate.** Before you write a single panel, author `meta.brief` — one sentence that is the *answer*, not the topic — and `meta.keyQuestions` — the 2–4 questions the dashboard is designed to answer, in priority order (index 0 = the primary question). If you can't write the brief, you don't understand the data yet — go back to step 1. Check the `dvt_dashboard_apply_spec(preview=true)` result: `plan.provenance` carries advisory suggestions ranked `gate` / `warn` / `info` (ADR-0004 Amendment 1). A `gate`-severity suggestion on `meta.brief` for a 3+ panel dashboard means **refuse to finalize** — go back and write the brief before you call apply without `preview`. The server never rejects the spec itself (enforcement is advisory at persistence, ADR-0018); the skill — you — is the enforcement point. Don't escalate other concerns into this gate: `meta.purpose`, `meta.audience`, and `meta.keyQuestions` missing surface only as `warn` (Tier 2), and coherence/layout issues are the `narrative-coherence`/`layout-auditor` subagents' job (Tier 2/3), not a blocker here.
+
 - **Answer-first (Minto / SCQA):** lead with the conclusion, then the support. The first page and the top-left panel carry the headline; detail comes after.
 - **One question per page.** Order pages and panels so a reader gets the answer in the first few seconds and can drill into "why" below.
 - Open each page with a `text` panel stating that page's takeaway, using live `{{ field | agg | format }}` variables so the prose moves with the data.
 
-### 3. Design — encoding and layout in service of the message
+**Panel ↔ question mapping.** Once `meta.keyQuestions` exists, cite which question each panel answers via `meta.panels[panelId].serves_question` — a **zero-based index** into `meta.keyQuestions`, never the question text (an index survives a wording edit; text wouldn't). Omit it for a panel that serves no single question (navigation, decoration, a filter bar).
+
+**Section-level orphan check — not per-panel.** After panels are placed, check at the *section* level (a page, or a `section` panel band grouping several panels) whether it collectively answers at least one declared question. Checking per panel is too noisy for a normal build; check the group. A section none of whose panels' `serves_question` values trace back to `meta.keyQuestions` is a signal: fold it into an existing question, add the question it's actually answering to `meta.keyQuestions`, or cut it — a section answering no declared question is scope creep.
+
+**`keyQuestions` is append-only.** Never reorder or splice `meta.keyQuestions` in place once panels reference it by index — a silent reorder silently repoints every `serves_question` to the wrong question. Append new questions to the end. If a question genuinely must move or be removed, rewrite **every** `meta.panels[*].serves_question` index that pointed at it in the same edit, transactionally — never leave a stale index across a save (a stale/out-of-range index surfaces as a Tier-2 `warn`). When you delete a panel, also prune its `meta.panels[panelId]` entry — an orphan key matching no panel id surfaces as a Tier-3 `info` nudge.
+
+### 3. Audience-driven generation — `meta.audience` shapes the build, not just the metadata
+
+`meta.audience` (`executive` | `analyst` | `operator`) is a generation contract, not a label applied after the fact (ADR-0004 Amendment 1) — decide it alongside `meta.brief` in step 2, and let it steer every choice in step 4 (design) and step 5 (build).
+
+- **`executive`** → compressed narrative, bigger key metrics, action-oriented panel/section titles, recommendation up top.
+  - Fewer panels, more compression: one hero KPI + a short supporting group beats ten charts.
+  - Titles state the recommendation, not the topic: "Renew ENT accounts before Q3 churn risk hits 8%," not "Churn by Segment."
+  - *Worked example:* `meta.brief: "Renew now — ENT churn risk crosses 8% in Q3."` → the page opens with a `hero` panel stating that sentence, then one 3-card KPI strip (signed deltas), then a single supporting chart. No raw table, no drill-down affordances above the fold.
+- **`analyst`** → denser data + richer exploration affordances.
+  - More panels/detail is fine here; add filters, drill-downs, and rich tables (conditional formatting, in-cell viz — see "Rich tables") that the executive build would omit.
+  - Titles can name the metric plainly ("Churn by Segment, Trailing 12mo") — the analyst wants the cut, not a pre-chewed conclusion.
+  - *Worked example:* the same churn question renders as a `filter` panel for segment/region, a `chart:line` trend with `tooltip.fields` extra columns, and a rich `table` with `colorScale` heat-mapping the risk column — inviting the reader to slice further.
+- **`operator`** → monitoring/freshness orientation.
+  - Lead with current status, not narrative: is the system/process healthy right now?
+  - Keep `meta.dataAsOf` / data-freshness visible (a `stat`/`kpi` panel or footnote citing it), not buried in the docs drawer — an operator dashboard whose data might be stale is actively misleading.
+  - Favor status-forward primitives: `kpi`/`metric-strip` with delta + sparkline, threshold-colored panels for in-range vs out-of-range state, minimal historical narrative.
+  - *Worked example:* a `metric-strip` of current queue depth / error rate / latency p95, each with a semantic-color threshold (see "Query-bound thresholds"), plus a footnote citing `meta.dataAsOf` so the on-call reader knows how current the numbers are.
+
+### 3b. Build style — settle the layout preference before design begins (DVT-830)
+
+Audience says *who* the dashboard is for; build style says *how* the user wants it built — a
+second, separate thing to decide alongside `meta.brief`/`meta.audience` in step 2/3, before you
+touch design or layout (step 4). Ask (or infer from the brief) which of three build styles fits:
+
+- **quick KPI wall** — a dense grid of scorecards/metric-strips, minimal narrative chrome, fastest
+  to build and scan.
+- **immersive / free-form report** — a scroll-driven, full-bleed story (canvas mode) with motion
+  and one idea per section.
+- **custom / bespoke look** — a heavier design pass (custom theming, HTML escape hatches,
+  non-standard treatment) — still grid or canvas underneath, but with more art direction.
+
+⚠️ **ADR-0057 guardrail — this question is presentation-only.** It's about build STYLE/LAYOUT
+preference, never about the data itself — never use it to discover warehouse schema, tables, or
+sample data. Data discovery is a separate concern (the profiling in step 1); don't blend the two.
+
+Record the answer in **`meta.decisions`** with a recognizable prefix so it's easy to find later:
+`"Build style: <kpi-wall|immersive|custom> — <one-line why>"`, e.g. `"Build style: kpi-wall —
+exec wants a fast daily scan, not a narrative."` There is no dedicated schema field for build
+style (unlike `meta.audience`, which is a schema-validated enum) — this is an **authoring
+convention only**, so `dvt_spec_validate` neither requires nor enforces it. Set it before step 4
+(Design) so the layout-format rubric below has an answer to consume.
+
+### 4. Design — encoding and layout in service of the message
 
 - **Match the chart to the analytical task,** not to variety: trend → line/area; comparison → bar; distribution → histogram/box; relationship → scatter; part-to-whole → a few bars or a single donut (not a wall of pies); flow → sankey; concentration → sorted bar / Pareto. (See Panel types; avoid passthrough types that need inline data when binding a live query.)
 - **Reserve color for signal** — the primary series, a delta, an outlier. Everything else stays neutral. Keep series colors as `{chart.series.N}` so the theme drives them.
@@ -1938,16 +2099,44 @@ Prefer cuts with real variance — **time series, distributions, comparisons of 
 - **Group and align** related panels; keep ≤ ~8–12 per page. Don't crowd — the renderer adapts label density to panel width automatically, so trust it instead of cramming.
 - **For a narrative showpiece, reach for canvas mode** (`layout.mode: "canvas"`): one idea per scrolling section, a `hero` + `stat` opener, motion on entrance. Scrollytelling (Segel & Heer, author-driven) is the canvas analogue of answer-first paging — see Canvas mode.
 
+**Layout-format rubric — map the build style to `layout.mode` (DVT-831).** Two real layout
+formats exist today; pick with a short rubric, not a guess. Read the build style you recorded in
+`meta.decisions` (step 3b) plus the brief's own characteristics — panel count, narrative weight,
+audience — and map to a format:
+
+| Build style / brief | Characteristics | Layout format |
+|---|---|---|
+| quick KPI wall | few panels, scorecards/metric-strips, exec or operator audience, scan-fast | `grid` (default) |
+| dense analyst exploration | many panels, filters, drill-downs, rich tables | `grid` |
+| immersive / free-form report | narrative showpiece, one idea per scrolling section, exec/prospect-facing | `canvas` (`layout.mode: "canvas"`, ADR-0027) |
+| custom / bespoke, still tile-oriented | non-standard theming or HTML blocks, but panels stay tiled | `grid` |
+| custom / bespoke, scroll-driven | non-standard theming, sectioned scroll story, motion | `canvas` |
+
+`grid` (`layout.mode` omitted, or set to `"grid"`) is the default — the 24-column tile grid used
+above, right for KPI walls and analyst views. `canvas` (`layout.mode: "canvas"`) is for immersive,
+full-bleed, scroll-driven decks — see **Canvas mode** below. When the build style doesn't cleanly
+map (most "custom/bespoke" answers), let the brief's characteristics from the table break the tie.
+
+*A future third option is not available yet.* DVT-828 / ADR-0059 (**Proposed**, not yet ratified)
+sketches an HTML-slot page mode — full custom HTML/CSS in place of the panel grid — for cases
+neither `grid` nor `canvas` fits well. Treat it as a soft dependency only: don't author against
+it, and don't tell a user it's available; check ADR-0059's status before relying on it.
+
+**No `dvt_layout_recommend` MCP tool — this is a settled design decision (head-of-product).** With
+only two real layout formats, a written rubric is enough; an MCP tool to automate this one pick
+isn't worth the surface area yet. Don't add one on your own initiative — revisit this call once
+the HTML-slot mode above actually ships and there's a real three-way decision worth automating.
+
 **Let the chart reference drive selection.** Call `dvt_chart_reference()` with no arguments to get the catalog — every chart type with a one-line `whenToUse` and `dataShapes` tags (`time-series`, `part-to-whole`, `correlation`, `flow`, `distribution`, `hierarchy`, `geo`, `categorical-comparison`, `ranking`, `multivariate`, `network`, `single-kpi`). Match your profiled data's shape to a type, then call `dvt_chart_reference(chart_type)` for its option summary and `dvt_chart_reference(chart_type, property_path)` to drill into a specific property before you author it. Validate the result with `dvt_spec_validate`.
 
-### 4. Build, then SEE it — verify and iterate
+### 5. Build, then SEE it — verify and iterate
 
 1. Write the spec (mechanics above). Bind each panel to a fully-qualified `query`.
 2. Validate with `dvt_spec_validate` — fix field errors and heed `warnings` (typos, and panels that will render EMPTY).
 3. **Render and actually look at it:** `dvt_dashboard_render_inline` at desktop (`width` ~1280–1440) AND mobile (`width` ~390–414), for each `page`. Read the image: is there a clear headline? Any unreadable text, squished labels, empty panels, flat bars? Does it answer the question?
 4. Iterate on what you saw, then save via the API / MCP. **Don't ship a dashboard you haven't looked at.**
 
-### 5. Premium polish — the exec-grade checklist
+### 6. Premium polish — the exec-grade checklist
 
 For a C-suite / board / prospect-facing dashboard, run this final gate (every item TRUE) before
 you ship. It's the authoring-skill condensation of the executive-dashboard playbook:
@@ -2025,7 +2214,7 @@ Use **exposed fields** for caveats, source attribution, and narrative context th
 }
 ```
 
-`ProvenanceClaim` shape: `{ "text": string, "assertedBy": "agent" | "human", "validatedAt"?: ISO-8601 }`. Use `assertedBy: "human"` only when a human has explicitly confirmed the claim; `agent` is the honest default for AI-asserted assumptions.
+`ProvenanceClaim` shape: `{ "text": string, "assertedBy": "agent" | "human", "validatedAt"?: ISO-8601 }`. **Never emit an `assumptions`/`conclusions` entry without `assertedBy`** — every claim you author is either `agent` (your own inference) or `human` (a human explicitly confirmed it in this conversation); there is no unlabeled default. `agent` is the honest default for AI-asserted assumptions — use `assertedBy: "human"` only when a human has explicitly confirmed the claim. Both `assertedBy` and `validatedAt` are **author-asserted, not server-attested**: the server does not verify who actually wrote the claim, so never claim `assertedBy: "human"` (or set `validatedAt`) unless a human genuinely said so in-session. An honest `agent`-asserted, unvalidated claim is a known, surfaced epistemic gap (a Tier-3 `info` nudge) — not an error, and far better than a false attestation.
 
 ### Element intent and assumptions (`meta.panels[id]`)
 
@@ -2093,6 +2282,228 @@ This tool is far cheaper than `dvt_dashboard_get(format="full")` when you only n
 | What decision this element informs | `meta.panels[id].intent` | Agent / research |
 | Metric-level assumptions (joins, filters, grain) | `meta.panels[id].assumptions[]` | Agent / research |
 | Data-quality caveats for this element | `meta.panels[id].notes` | Agent / research |
+
+## Scheduled exports (DVT-731, DVT-791, ADR-0051)
+
+Recurring PDF or PNG exports let a dashboard deliver itself on a schedule — no human
+has to remember to check.  **Use a scheduled export** when someone wants the same
+dashboard on a recurring cadence (a Monday exec digest, an end-of-month report);
+**use a one-off render** (`dvt_dashboard_render`) when they want the artifact once,
+right now.  Six tools cover the full lifecycle:
+
+| Tool | Verb | Permission | Purpose |
+|------|------|-----------|---------|
+| `dvt_export_schedule_preview` | dry-run | `dashboard:write` | Validate a recurrence and see the next fire times **before** creating/updating — persists nothing |
+| `dvt_export_schedule_create`  | write   | `dashboard:write` | Create a schedule, add recipients, wire Slack channels in one call |
+| `dvt_export_schedule_list`    | read    | `dashboard:read`  | List all schedules for a dashboard |
+| `dvt_export_schedule_get`     | read    | `dashboard:read`  | Fetch one schedule with its recipients + run state |
+| `dvt_export_schedule_update`  | write   | `dashboard:write` | Partially update a schedule (merge patch) |
+| `dvt_export_schedule_delete`  | write   | `dashboard:write` | Permanently delete a schedule and its run history |
+
+**Recommended agent workflow:** `preview` the recurrence → `create` the schedule →
+`list`/`get` to confirm → `update` to adjust → `delete` when retired.  Previewing
+first turns an opaque cron string into concrete timestamps you can sanity-check
+against the audience's calendar, so you never ship a schedule that fires at 3am.
+
+### Previewing a recurrence — `dvt_export_schedule_preview`
+
+The "see before committing" tool.  Call it before `create` or `update` to confirm
+a cron or preset fires at the intended wall-clock times — it validates the
+expression and returns the next fire times **without persisting anything**.
+
+```
+dvt_export_schedule_preview(
+    dashboard_id = "<uuid>",
+    cron         = "*/15 9-17 * * 1-5",   # every 15 min, 9am–5pm, weekdays
+    timezone     = "America/New_York",
+    count        = 5,                       # next N occurrences (default 5, clamped 1–20)
+)
+# → { "cron": "*/15 9-17 * * 1-5",
+#     "timezone": "America/New_York",
+#     "nextRuns": ["2026-06-30T13:00:00Z", "2026-06-30T13:15:00Z", ...] }  # UTC
+```
+
+Supply `cron` **or** `preset` (same preset shape as `create`), not both.  The cron
+is evaluated in `timezone` (IANA name, default `UTC`); every returned `nextRuns`
+timestamp is in UTC.  On bad input the tool returns a structured error whose message
+describes the exact validation failure — a bad cron expression or unknown timezone
+(the server's rejection reason is carried in the error `detail`), or supplying both
+or neither recurrence (caught with a `suggestion` before the call is made).
+
+> The Go API is the **only** cron parser in the stack — the engine and web both defer
+> to it (DVT-746).  Preview therefore returns the same fire times the server runner
+> will actually use, so what you preview is what you get.
+
+### Creating a schedule — `dvt_export_schedule_create`
+
+One tool call composes the full setup: create the schedule, add email recipients,
+and wire Slack channels.
+
+```
+dvt_export_schedule_create(
+    dashboard_id = "<uuid>",
+    format       = "pdf",           # "pdf" | "png"
+    preset       = { "kind": "weekly", "dayOfWeek": 1, "atHour": 9 },
+    timezone     = "America/New_York",
+    title        = "Monday morning exec digest",
+    recipients   = ["ceo@acme.com", "cfo@acme.com"],
+    slack_channels = [
+        { "label": "#leadership", "webhook_url": "https://hooks.slack.com/..." }
+    ],
+)
+```
+
+**Recurrence — pick one, not both:**
+
+- **`cron`** — a raw 5-field POSIX expression (`"MIN HOUR DOM MON DOW"`).  Use when
+  you need a schedule that no preset can express (e.g. every 15th and last day of
+  the month).  Validation is server-side; a 400 response carries a `suggestion` with
+  the corrected form.
+- **`preset`** — the simpler, self-documenting option for common patterns:
+
+  | `kind`    | Extra fields                              | Example cron |
+  |-----------|-------------------------------------------|--------------|
+  | `hourly`  | `atMinute` (default 0)                    | `"0 * * * *"` |
+  | `daily`   | `atHour`, `atMinute`                      | `"0 9 * * *"` |
+  | `weekly`  | `atHour`, `atMinute`, `dayOfWeek` (0=Sun) | `"0 9 * * 1"` |
+  | `monthly` | `atHour`, `atMinute`, `dayOfMonth` (1–28) | `"0 9 15 * *"` |
+
+Always supply `timezone` (IANA name, e.g. `"America/New_York"`) so the cron fires
+at the right wall-clock time for the audience — default is `UTC`.
+
+**Slack is the live delivery channel today.** Slack incoming webhooks (DVT-729) are
+the only channel the runner currently delivers to.  **Email delivery is forthcoming
+(DVT-728)** — you can already add email `recipients` and they go through the approval
+flow below, but the runner does not yet send the email itself, so for an export that
+must actually land somewhere now, wire a Slack channel.
+
+**Recipients:** internal org members are `active` immediately; external addresses
+enter `pending_approval` and must be approved by a dashboard owner or org admin
+before they would receive deliveries (once email delivery ships).
+
+**Slack channels:** each entry needs `label` (a friendly name, e.g. `"#leadership"`)
+and `webhook_url` (a Slack incoming webhook URL).  Get the webhook from Slack →
+*Apps → Incoming Webhooks → Add to Slack*, pick the target channel, and copy the
+`https://hooks.slack.com/services/…` URL it generates.
+
+### Listing schedules — `dvt_export_schedule_list`
+
+```
+dvt_export_schedule_list(dashboard_id="<uuid>")
+```
+
+Returns all schedules for the dashboard.  The `recipients` (email + approval status)
+and `destinations` (Slack channel label + last delivery status) arrays are populated
+only for `dashboard:write` callers (split read model — PII protection); read-only
+callers see schedule metadata only.  The webhook secret is never included in any
+read response (ADR-0012).
+
+### Fetching one schedule — `dvt_export_schedule_get`
+
+```
+dvt_export_schedule_get(dashboard_id="<uuid>", schedule_id="<uuid>")
+```
+
+Returns the full `ExportSchedule` record for a single schedule, including its
+recurrence (`cron`, `timezone`), `format`, `enabled` flag, and run state
+(`nextRunAt`, `lastRunAt`).  As with `list`, the `recipients` (email + approval
+status) and `destinations` (Slack channel label + last delivery status) arrays are
+populated only for `dashboard:write` callers; absent/empty for read-only callers.
+The webhook secret is never included in any read response (ADR-0012).  A 404 means
+the schedule or dashboard is not visible to the caller's key.
+
+Per-delivery run logs are **not** surfaced here — only the schedule-level
+`lastRunAt`.  A dedicated runs endpoint is deferred (DVT-744).
+
+### Updating a schedule — `dvt_export_schedule_update`
+
+A merge patch: only the fields you pass are changed; omit a field to leave it as-is.
+
+```
+dvt_export_schedule_update(
+    dashboard_id = "<uuid>",
+    schedule_id  = "<uuid>",
+    preset       = { "kind": "weekly", "dayOfWeek": 5, "atHour": 17 },  # move to Fri 5pm
+    enabled      = false,                                               # pause it
+)
+```
+
+Patchable fields: `title`, `format`, `enabled`, `timezone`, and the recurrence
+(`cron` **or** `preset` — not both; omit both to leave the recurrence unchanged).
+`timezone` is independently patchable: change it alone to shift an existing schedule
+to a new wall-clock zone without touching its cron.  When `cron` or `timezone`
+changes, `next_run_at` is recomputed atomically server-side, so the next fire
+reflects the new recurrence immediately.
+
+**Out of scope:** this tool does not edit recipients or Slack destinations — manage
+those via the REST `…/recipients` and `…/destinations` endpoints (a dedicated MCP
+tool for recipient/destination mutation is a planned follow-up).
+
+**Tip:** run `dvt_export_schedule_preview` with the new recurrence first to confirm
+the fire times before patching.
+
+### Deleting a schedule — `dvt_export_schedule_delete`
+
+```
+dvt_export_schedule_delete(dashboard_id="<uuid>", schedule_id="<uuid>")
+```
+
+Hard delete — removes the schedule, all recipients, all Slack destinations, and the
+full delivery run history.  Irreversible.  Confirm the schedule id from
+`dvt_export_schedule_list` before calling.
+
+### Worked example — from a request to a confirmed schedule
+
+> **User:** "Post the revenue dashboard to our #finance Slack every weekday morning
+> at 8am Eastern."
+
+**1 — Preview the recurrence first** (turn the ask into concrete fire times the user
+can confirm; nothing is persisted yet):
+
+```
+dvt_export_schedule_preview(
+    dashboard_id = "rev-dash-uuid",
+    preset       = { "kind": "daily", "atHour": 8, "atMinute": 0 },  # weekday-only → see note
+    timezone     = "America/New_York",
+)
+# → nextRuns: ["2026-06-30T12:00:00Z", "2026-07-01T12:00:00Z", ...]  (08:00 EDT = 12:00Z)
+```
+
+The `daily` preset fires every day; "every weekday" needs a raw cron, so preview that
+instead and confirm it skips the weekend:
+
+```
+dvt_export_schedule_preview(
+    dashboard_id = "rev-dash-uuid",
+    cron         = "0 8 * * 1-5",        # 08:00, Mon–Fri
+    timezone     = "America/New_York",
+)
+# → nextRuns: ["2026-06-30T12:00:00Z" (Tue), ... skips Sat/Sun ...]
+```
+
+**2 — Create the schedule** with the confirmed cron and the Slack channel:
+
+```
+dvt_export_schedule_create(
+    dashboard_id   = "rev-dash-uuid",
+    format         = "pdf",
+    cron           = "0 8 * * 1-5",
+    timezone       = "America/New_York",
+    title          = "Weekday revenue digest → #finance",
+    slack_channels = [{ "label": "#finance", "webhook_url": "https://hooks.slack.com/services/…" }],
+)
+# → { "id": "sched-uuid", "nextRunAt": "2026-06-30T12:00:00Z", ... }
+```
+
+**3 — Confirm** the schedule is wired as intended:
+
+```
+dvt_export_schedule_get(dashboard_id="rev-dash-uuid", schedule_id="sched-uuid")
+# → nextRunAt + recurrence; tell the user "first delivery Tue 8:00am ET."
+```
+
+To pause it later, `dvt_export_schedule_update(..., enabled=false)`; to retire it,
+`dvt_export_schedule_delete(...)`.
 
 ## Rules
 
