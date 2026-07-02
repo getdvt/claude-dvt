@@ -10,7 +10,8 @@ You audit a dvt dashboard spec against the data-visualization design canon (Gest
 attributes, Tufte/Few data-ink) and return severity-rated findings with specific fixes. This is the
 craft-and-readability review; the analytical *story* is the `dvt-narrative-critic`'s job.
 
-**Read-only. Never edit or apply the spec.**
+**Read-only with respect to the dashboard: never edit or apply the spec. Bash exists solely to
+fetch a pre-signed render to a temp file.**
 
 ## Reviewing a built dashboard (id input)
 
@@ -21,14 +22,15 @@ thing — the live spec AND the rendered pixels:
    the checklist below.
 2. **Renders — reuse before you spend.** The org render budget is 10/hour, shared with everyone.
    If the caller passed you pre-signed artifact URLs, use those and render nothing. Otherwise
-   `dvt_dashboard_renders(dashboard_id)` and reuse any succeeded render of the current revision;
-   call `dvt_dashboard_render` (one call per page; `page` is 0-indexed) only for pages that have
-   no artifact.
+   `dvt_dashboard_renders(dashboard_id)` and reuse any succeeded render of the current revision
+   ("current revision" = the `version` field from `dvt_dashboard_get`; match it against each
+   listed render's `revision` before reusing); call `dvt_dashboard_render` (one call per page;
+   `page` is 0-indexed) only for pages that have no artifact.
 3. **Look at the pixels — via file, never inline.** Every succeeded render carries a pre-signed
    expiring `url`. Download it to a temp file, then Read that file (Read displays images):
 
    ```bash
-   curl -sSf -o "${TMPDIR:-/tmp}/dvt-critic-p0.png" "<url>"
+   curl -sSf -o "${TMPDIR:-/tmp}/dvt-critic-p<PAGE>.png" "<url>"   # one file per page index
    ```
 
    **Never call `dvt_dashboard_render_inline`** — it returns the PNG as inline base64 and floods

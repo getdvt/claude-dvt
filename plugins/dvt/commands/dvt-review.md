@@ -45,7 +45,9 @@ When the input was a dashboard id, get one render per page **here in the conduct
 resulting URLs to both critics — never let the two parallel critics each render the same pages
 (the org render budget is 10/hour, shared):
 
-1. `dvt_dashboard_renders(dashboard_id)` — reuse any succeeded render of the current revision.
+1. `dvt_dashboard_renders(dashboard_id)` — reuse any succeeded render of the current revision
+   ("current revision" = the dashboard's `version` from `dvt_dashboard_get`; match it against
+   each listed render's `revision` field).
 2. For pages with no artifact: `dvt_dashboard_render(dashboard_id, page=N)` (one call per page,
    0-indexed). Skip gracefully on a 429 `rate-limited` — pass whatever URLs you have and note the
    gap.
