@@ -1,14 +1,16 @@
 ---
-description: Critique a dvt dashboard before you apply it — runs a narrative + layout review (a fresh, unbiased pass) and folds in the engine's deterministic lints, then gives you a GO / REVISE recommendation with concrete fixes.
+description: Critique a dvt dashboard — a spec before you apply it, or a built dashboard (by id) including its rendered pages. Runs a narrative + layout review (a fresh, unbiased pass), folds in the engine's deterministic lints, then gives you a GO / REVISE recommendation with concrete fixes.
 ---
 
-# /dvt:dvt-review — critique a dashboard before applying it
+# /dvt:dvt-review — critique a dashboard (pre-apply, or built)
 
-You are running a **pre-apply design critique** of a dvt dashboard. The point is a *clean read*: the
+You are running a **design critique** of a dvt dashboard. The point is a *clean read*: the
 session that just authored a spec carries the same assumptions that produced it and is the worst judge
 of it, so this command dispatches two **fresh subagents** to critique it from scratch, folds in the
-engine's deterministic checks, and hands the user one verdict with fixes — **before**
-`dvt_dashboard_apply_spec` persists anything.
+engine's deterministic checks, and hands the user one verdict with fixes. It works **pre-apply** (a
+spec that hasn't persisted yet) and **post-build** (a dashboard id — the critics then also see the
+actual rendered pages, which catch what spec-reading can't: clipped labels, colliding legends,
+truncated cells).
 
 > Why this lives in dvt: a viz-quality audit (narrative spine + layout craft, grounded in Gestalt /
 > Tufte / Minto) is dvt's own domain expertise, shipped as a first-class feature — not a generic
@@ -19,8 +21,9 @@ engine's deterministic checks, and hands the user one verdict with fixes — **b
 Figure out what to review, in this order:
 
 1. **An argument was given** — `$ARGUMENTS`:
-   - a dashboard id (a UUID, or `dvt://…`) → fetch it: `dvt_dashboard_get(dashboard_id, format="full")`
-     and review the returned `spec`.
+   - a dashboard id (a UUID, or `dvt://…`) → this is the **built-dashboard path**: fetch it with
+     `dvt_dashboard_get(dashboard_id, format="full")` and review the returned `spec` (Step 2.5
+     also applies).
    - a path to a `.json` file → read it.
    - pasted spec JSON → use it directly.
 2. **No argument** — review the dvt dashboard spec **just authored in this session** (the one the user
@@ -36,10 +39,25 @@ These are the cheap, exact checks; the subagents must **fold them in, not recomp
 fails hard schema validation (`valid: false`), report the field errors and stop — there's nothing to
 critique until it's a valid spec.
 
+## Step 2.5 — built-dashboard path only: render each page ONCE, up front
+
+When the input was a dashboard id, get one render per page **here in the conductor** and hand the
+resulting URLs to both critics — never let the two parallel critics each render the same pages
+(the org render budget is 10/hour, shared):
+
+1. `dvt_dashboard_renders(dashboard_id)` — reuse any succeeded render of the current revision.
+2. For pages with no artifact: `dvt_dashboard_render(dashboard_id, page=N)` (one call per page,
+   0-indexed). Skip gracefully on a 429 `rate-limited` — pass whatever URLs you have and note the
+   gap.
+3. Collect the pre-signed `url` of each succeeded render.
+
+Do **not** call `dvt_dashboard_render_inline` and do not download the images yourself — the critics
+pull each URL to a temp file and Read it there, keeping the PNG bytes out of this session's context.
+
 ## Step 3 — dispatch both critics (fresh, in parallel)
 
-Dispatch BOTH subagents in one step so they run concurrently, each with the spec JSON and the lint
-`warnings[]` from Step 2:
+Dispatch BOTH subagents in one step so they run concurrently, each with the spec JSON, the lint
+`warnings[]` from Step 2, and (built-dashboard path) the per-page render URLs from Step 2.5:
 
 - **`dvt-narrative-critic`** — does it tell a coherent analytical story? (answer-first, structure,
   cross-page spine, key message)

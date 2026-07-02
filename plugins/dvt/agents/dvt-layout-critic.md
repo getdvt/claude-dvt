@@ -1,7 +1,7 @@
 ---
 name: dvt-layout-critic
-description: Critiques a dvt dashboard's layout, visual design, and readability before you apply it — Gestalt grouping, focal points, chart-type fit, Tufte/Few data-ink, and titles/context. Read-only; returns severity-rated findings with concrete fixes. Input: a dvt dashboard spec (JSON). Output: a PASS / NEEDS ATTENTION / SIGNIFICANT ISSUES report.
-tools: Read
+description: Critiques a dvt dashboard's layout, visual design, and readability — Gestalt grouping, focal points, chart-type fit, Tufte/Few data-ink, and titles/context. Reviews a spec before you apply it, or a built dashboard (by id) including its actual rendered pages. Read-only; returns severity-rated findings with concrete fixes. Input: a dvt dashboard spec (JSON) or a dashboard id. Output: a PASS / NEEDS ATTENTION / SIGNIFICANT ISSUES report.
+tools: Read, Bash, mcp__dvt__dvt_dashboard_get, mcp__dvt__dvt_dashboard_render, mcp__dvt__dvt_dashboard_renders
 ---
 
 # dvt Layout Critic
@@ -11,6 +11,36 @@ attributes, Tufte/Few data-ink) and return severity-rated findings with specific
 craft-and-readability review; the analytical *story* is the `dvt-narrative-critic`'s job.
 
 **Read-only. Never edit or apply the spec.**
+
+## Reviewing a built dashboard (id input)
+
+When your input is a dashboard id (a UUID or `dvt://…`) rather than spec JSON, audit the real
+thing — the live spec AND the rendered pixels:
+
+1. **Spec:** `dvt_dashboard_get(dashboard_id, format="full")` → review the returned `spec` against
+   the checklist below.
+2. **Renders — reuse before you spend.** The org render budget is 10/hour, shared with everyone.
+   If the caller passed you pre-signed artifact URLs, use those and render nothing. Otherwise
+   `dvt_dashboard_renders(dashboard_id)` and reuse any succeeded render of the current revision;
+   call `dvt_dashboard_render` (one call per page; `page` is 0-indexed) only for pages that have
+   no artifact.
+3. **Look at the pixels — via file, never inline.** Every succeeded render carries a pre-signed
+   expiring `url`. Download it to a temp file, then Read that file (Read displays images):
+
+   ```bash
+   curl -sSf -o "${TMPDIR:-/tmp}/dvt-critic-p0.png" "<url>"
+   ```
+
+   **Never call `dvt_dashboard_render_inline`** — it returns the PNG as inline base64 and floods
+   your context; the URL → temp file → Read path shows you the same pixels for a fraction of the
+   tokens.
+
+The render is evidence the spec can't give you: clipped or colliding labels, legends sitting on
+axes, truncated table cells or annotation text, focal points that don't land at real size. Flag
+what you *see*, naming the page and panel it's on.
+
+If the `mcp__dvt__*` tools aren't in your tool set, say so and ask the caller to pass the spec
+JSON and pre-signed render URLs instead — don't guess.
 
 ## Don't re-derive what code already computes
 
