@@ -114,7 +114,7 @@ build.
 | `chart:treemap` | ECharts treemap (passthrough) | inline `series[].data` hierarchy (`{ name, value, children }`), `levels` |
 | `chart:sankey` | ECharts sankey | `sourceField`/`targetField`/`valueField` columns → nodes + links (or inline `series[].data` + `series[].links`) |
 | `chart:tree` | ECharts tree (passthrough) | inline `series[].data` hierarchy, `layout` (`orthogonal`/`radial`) |
-| `chart:sunburst` | ECharts sunburst (passthrough) | inline `series[].data` hierarchy (`{ name, value, children }`), `radius` |
+| `chart:sunburst` | ECharts sunburst (passthrough) | flat query rows via `hierarchyFields` (ordered inner→outer level columns) + `valueField`; or inline `series[].data` hierarchy (`{ name, value, children }`); `radius` — **Two binding modes: map flat query rows with `hierarchyFields` (inner→outer level columns) + `valueField`, or hand-author the nested inline `series[].data` tree (DVT-1101).** |
 | `chart:boxplot` | ECharts boxplot (passthrough) | inline `series[].data: [[min, Q1, median, Q3, max], …]` + category `xAxis.data` |
 | `chart:candlestick` | ECharts candlestick (passthrough) | inline `series[].data: [[open, close, low, high], …]` + category `xAxis.data` |
 | `chart:graph` | ECharts graph (passthrough) | inline `series[].data` (nodes) + `series[].links`, `layout: "force"`, `categories` |
