@@ -1,6 +1,6 @@
 ---
 name: dvt-layout-critic
-description: Critiques a dvt dashboard's layout, visual design, and readability — Gestalt grouping, focal points, chart-type fit, Tufte/Few data-ink, and titles/context. Reviews a spec before you apply it, or a built dashboard (by id) including its actual rendered pages. Read-only; returns severity-rated findings with concrete fixes. Input: a dvt dashboard spec (JSON) or a dashboard id. Output: a PASS / NEEDS ATTENTION / SIGNIFICANT ISSUES report.
+description: "Critiques a dvt dashboard's layout, visual design, and readability — Gestalt grouping, focal points, chart-type fit, Tufte/Few data-ink, and titles/context. Reviews a spec before you apply it, or a built dashboard (by id) including its actual rendered pages. Read-only; returns severity-rated findings with concrete fixes. Input: a dvt dashboard spec (JSON) or a dashboard id. Output: a PASS / NEEDS ATTENTION / SIGNIFICANT ISSUES report."
 tools: Read, Bash, mcp__dvt__dvt_dashboard_get, mcp__dvt__dvt_dashboard_render, mcp__dvt__dvt_dashboard_renders
 ---
 
