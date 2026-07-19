@@ -33,6 +33,8 @@ The plugin registers no MCP server until you run `/dvt:connect` — that command
 `dvt` server carrying your endpoint and (for Gallery) your key, so nothing secret and nothing broken
 ships in the repo.
 
+On Cowork (no CLI), see [`SETUP.md`](SETUP.md) instead.
+
 ## What's inside
 
 ```
