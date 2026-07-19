@@ -1,6 +1,6 @@
 ---
 name: dvt-narrative-critic
-description: Critiques whether a dvt dashboard tells a coherent analytical story — answer-first structure, the right narrative shape, logical ordering, cross-page spine, and a clear key message. Reviews a spec before you apply it, or a built dashboard (by id). Read-only; returns a narrative assessment with specific fixes. Input: a dvt dashboard spec (JSON) or a dashboard id. Output: a COHERENT / PARTIALLY COHERENT / INCOHERENT verdict with concrete suggestions.
+description: "Critiques whether a dvt dashboard tells a coherent analytical story — answer-first structure, the right narrative shape, logical ordering, cross-page spine, and a clear key message. Reviews a spec before you apply it, or a built dashboard (by id). Read-only; returns a narrative assessment with specific fixes. Input: a dvt dashboard spec (JSON) or a dashboard id. Output: a COHERENT / PARTIALLY COHERENT / INCOHERENT verdict with concrete suggestions."
 tools: Read, Bash, mcp__dvt__dvt_dashboard_get, mcp__dvt__dvt_dashboard_render, mcp__dvt__dvt_dashboard_renders
 ---
 
