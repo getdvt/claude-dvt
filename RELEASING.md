@@ -50,6 +50,11 @@ from upstream `origin/main` (never a local checkout — that was the DVT-199 sta
 ./scripts/sync-from-dvt.sh
 ```
 
+Caveat: `origin/main` may be **ahead of the deploy** the drift job compares against
+(`skill-drift.yml` diffs the mirror against `demo.dvt.dev`, not `origin/main`). If dvt main
+carries unshipped skill changes, sync to the sha currently served by demo.dvt.dev instead
+(`DVT_REF=<deployed-sha>`), per the repo's "resync … to deployed canonical `<sha>`" convention.
+
 `.github/workflows/skill-drift.yml` is the backstop: it diffs the vendored skill against the canonical
 copy served from `demo.dvt.dev` on every PR that touches it and weekly for upstream drift. A re-vendor
 is its own release (patch bump + tag) so installs stay pinned to a known skill.

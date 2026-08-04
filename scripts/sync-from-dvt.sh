@@ -24,6 +24,12 @@
 # bug was copying from a local checkout six commits behind origin/main; sourcing from
 # the fetched ref prevents that recurring. Mirrors website's scripts/sync-spec-skill.sh,
 # which carries the same hardening (DVT-2500 / DVT-2518).
+#
+# Caveat: `origin/main` may be AHEAD of the deploy that CI compares against —
+# .github/workflows/skill-drift.yml diffs the mirror against demo.dvt.dev, not origin/main.
+# If dvt main has unshipped skill changes, syncing from origin/main reds the drift job and
+# vendors tool names the deployed engine does not serve yet. Resync to the sha currently
+# served by demo.dvt.dev (repo convention: "resync … to deployed canonical <sha>").
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
