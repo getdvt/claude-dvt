@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "dvt",
-      "description": "Author dvt dashboards (dashboards-as-data) from your AI harness — bundles the spec-authoring skill + an MCP client to mcp.dvt.dev (or your self-hosted engine).",
+      "description": "Author dvt dashboards (dashboards-as-data) from your AI harness — bundles the spec-authoring skill + an MCP client to mcp.dvt.dev.",
       "author": {
         "name": "dvt"
       },

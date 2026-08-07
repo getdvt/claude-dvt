@@ -26,7 +26,7 @@ Run **`/dvt:connect`** and follow the prompts. You can point the client at eithe
 - **dvt Gallery (hosted)** — `https://mcp.dvt.dev/mcp` with a Gallery API key minted at
   `https://app.dvt.dev/app/api-keys`. The key is stored by Claude Code at user scope, never in this
   repo.
-- **Self-hosted engine** — your own dvt engine URL (e.g. `http://localhost:8001/mcp`), with or
+- **Direct engine URL** — a dvt engine URL you already have (e.g. `http://localhost:8001/mcp`), with or
   without auth depending on how you front it.
 
 The plugin registers no MCP server until you run `/dvt:connect` — that command adds a user-scoped
@@ -67,7 +67,7 @@ named `dvt` at user scope:
 claude mcp add --transport http --scope user dvt "https://mcp.dvt.dev/mcp" \
   --header "Authorization: Bearer dvt_live_…"
 
-# self-hosted engine — no auth
+# direct engine URL — no auth
 claude mcp add --transport http --scope user dvt "http://localhost:8001/mcp"
 ```
 
