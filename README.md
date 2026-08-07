@@ -34,8 +34,8 @@ over MCP; point it at one of two targets:
 - **dvt Gallery (hosted)** — connect to `https://mcp.dvt.dev/mcp` with a Gallery API key. Mint a key
   in your dvt workspace at `https://app.dvt.dev/app/api-keys`, then paste the `dvt_live_…` value when
   `/dvt:connect` prompts for it. The key is stored by Claude Code at user scope, never committed here.
-- **Self-hosted engine** — point the client at your own dvt engine URL instead (e.g.
-  `http://localhost:8001/mcp`). Use this if you run the dvt stack yourself.
+- **Direct engine URL** — point the client at a dvt engine URL you already have (e.g.
+  `http://localhost:8001/mcp`).
 
 `/dvt:connect` registers a user-scoped `dvt` MCP server with your endpoint and (for Gallery) your
 key, then verifies the connection by listing your dashboards. Once connected, just ask the agent to

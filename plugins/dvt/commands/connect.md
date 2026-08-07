@@ -1,5 +1,5 @@
 ---
-description: Connect this plugin to a dvt endpoint (dvt Gallery or a self-hosted engine), then verify the connection.
+description: Connect this plugin to a dvt endpoint (dvt Gallery or a direct engine URL), then verify the connection.
 ---
 
 # /dvt:connect — connect to dvt
@@ -8,16 +8,16 @@ You are walking the user from a fresh install to a working dvt connection. The u
 technical. Be concise, ask one thing at a time, and never print or echo their API key back to them.
 
 The plugin bundles no MCP server of its own — this command registers one. For dvt Gallery you
-register an authenticated, user-scoped `dvt` server; for self-host you point it at the user's engine
-URL. The key (if any) is stored only in the user's local Claude config — never write it to a file in
-this repo or anywhere in the project.
+register an authenticated, user-scoped `dvt` server; for a direct engine URL you point it at the
+user's engine URL. The key (if any) is stored only in the user's local Claude config — never write it
+to a file in this repo or anywhere in the project.
 
 ## Step 1 — pick a backend
 
 Ask the user:
 
-> Are you connecting to **dvt Gallery** (the hosted service at dvt.dev) or a **self-hosted dvt
-> engine** that you run yourself?
+> Are you connecting to **dvt Gallery** (the hosted service at dvt.dev) or a **dvt engine URL** you
+> already have?
 
 Branch on their answer.
 
@@ -41,7 +41,7 @@ Branch on their answer.
 3. Tell the user they must **restart Claude Code** for the new MCP server to take effect, then return
    and run `/dvt:connect` again (or just ask you to list their dashboards) to verify.
 
-## Step 2b — self-hosted engine
+## Step 2b — direct engine URL
 
 1. Ask for their engine's MCP URL:
 
@@ -74,7 +74,7 @@ If it fails, map the error:
 - **403 Forbidden** → the key is valid but lacks the scope (or the workspace tier) for this action.
   Point them at their key's scopes in the dvt app.
 - **Connection refused / cannot reach host** → the URL is wrong or the engine isn't running. For
-  self-host, double-check the engine URL and that the engine is up.
+  a direct engine URL, double-check the engine URL and that the engine is up.
 - **Server not found / no `dvt` tools** → the MCP server didn't load. Confirm they restarted Claude
   Code after Step 2, and that `claude mcp list` shows a `dvt` server.
 
@@ -102,7 +102,7 @@ to use:
    > Using your engine's spec-authoring skill (schemaVersion 2, engineRef `skill-1a2b3c4d5e6f`) — it
    > matches the spec version your dvt engine speaks.
 4. **Fall back to the bundled skill** — silently and without error — if the resource is **absent**
-   (an older or Community engine that predates it), **unreadable**, or reports a `schemaVersion` **< 1**.
+   (an older engine that predates it), **unreadable**, or reports a `schemaVersion` **< 1**.
    Missing freshness is **never a hard failure**; the bundled copy is always a valid baseline.
 
 **Why preferring the served copy is safe.** Trust derives from **the endpoint the user configured back
@@ -124,7 +124,7 @@ Once connected, **once per session** (and again whenever the user starts a genui
 
 1. **List them.** Call the **`dvt_skill_list`** tool. It returns one entry per skill you can use —
    `{ uri, slug, name, description, whenToUse, whoFor, howToApply, visibility, version }` — but **not**
-   the bodies. If the tool is **absent** (an older/Community engine that predates this) or returns an
+   the bodies. If the tool is **absent** (an older engine that predates this) or returns an
    **empty** list, skip this step silently — org skills are optional, never a hard requirement.
 2. **Pick the relevant ones** for the task at hand, using each entry's `whenToUse` / `whoFor` /
    `description`. Do **not** bulk-read every skill; read the few that fit what the user is building.
